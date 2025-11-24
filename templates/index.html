@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Transisi Energi Indonesia - Data Aktual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .data-source {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .btn-asean {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .results {
+            display: none;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .achieved {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .not-achieved {
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+        }
+
+        .plot-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .plot {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-results, .asean-results {
+            display: none;
+        }
+
+        .scenario-comparison, .asean-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .scenario-card, .country-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .country-card.indonesia {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .country-card.other {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Simulasi Transisi Energi Indonesia</h1>
+            <p>Pemodelan Sistem Dinamik Berbasis Data Aktual untuk Mencapai Target 23% Energi Terbarukan</p>
+            <div class="data-source">
+                Data Source: Renewable_Energy.csv | Target: 23% pada 2025
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('simulation')">Simulasi</div>
+            <div class="tab" onclick="switchTab('comparison')">Perbandingan</div>
+            <div class="tab" onclick="switchTab('asean')">ASEAN</div>
+            <div class="tab" onclick="switchTab('data')">Data Historis</div>
+        </div>
+
+        <!-- Tab Simulasi -->
+        <div class="tab-content active" id="simulation-tab">
+            <div class="card">
+                <h2>🎛️ Parameter Simulasi</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="scenario">Pilih Skenario Kebijakan:</label>
+                        <select id="scenario">
+                            <option value="business_as_usual">Business as Usual</option>
+                            <option value="investment_incentive">Insentif Investasi</option>
+                            <option value="strict_regulation">Regulasi Ketat</option>
+                            <option value="combined_policy">Kombinasi Kebijakan</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="end_year">Tahun Akhir Proyeksi:</label>
+                        <input type="number" id="end_year" min="2030" max="2050" value="2040">
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="runSimulation()">🚀 Jalankan Simulasi</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Menjalankan simulasi...</p>
+            </div>
+
+            <div class="card results" id="results">
+                <h2>📈 Hasil Simulasi</h2>
+                <div class="metrics" id="metrics"></div>
+                <div class="plot-container">
+                    <img id="plot" class="plot" alt="Hasil Simulasi">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Perbandingan -->
+        <div class="tab-content" id="comparison-tab">
+            <div class="card">
+                <h2>📊 Perbandingan Semua Skenario</h2>
+                <div class="control-group">
+                    <label for="compare_end_year">Tahun Akhir Proyeksi:</label>
+                    <input type="number" id="compare_end_year" min="2030" max="2050" value="2040">
+                </div>
+                <button class="btn btn-secondary" onclick="compareScenarios()">📈 Bandingkan Semua Skenario</button>
+            </div>
+
+            <div class="card comparison-results" id="comparisonResults">
+                <div class="plot-container">
+                    <img id="comparisonPlot" class="plot" alt="Perbandingan Skenario">
+                </div>
+                <div class="scenario-comparison" id="scenarioComparison"></div>
+            </div>
+        </div>
+
+        <!-- Tab ASEAN -->
+        <div class="tab-content" id="asean-tab">
+            <div class="card">
+                <h2>🌏 Perbandingan ASEAN</h2>
+                <p>Posisi Indonesia dibandingkan negara ASEAN lainnya dalam transisi energi terbarukan</p>
+                <button class="btn btn-asean" onclick="loadAseanComparison()">🔄 Muat Data ASEAN</button>
+            </div>
+
+            <div class="card asean-results" id="aseanResults">
+                <div class="plot-container">
+                    <img id="aseanPlot" class="plot" alt="Perbandingan ASEAN">
+                </div>
+                <div class="asean-comparison" id="aseanComparison"></div>
+            </div>
+        </div>
+
+        <!-- Tab Data Historis -->
+        <div class="tab-content" id="data-tab">
+            <div class="card">
+                <h2>📋 Data Historis Indonesia</h2>
+                <div id="historicalData"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'simulation';
+
+        function switchTab(tabName) {
+            // Sembunyikan semua tab
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Tampilkan tab yang dipilih
+            document.getElementById(tabName + '-tab').classList.add('active');
+            document.querySelectorAll('.tab')[getTabIndex(tabName)].classList.add('active');
+            currentTab = tabName;
+            
+            // Muat data untuk tab tertentu
+            if (tabName === 'asean') {
+                loadAseanComparison();
+            } else if (tabName === 'data') {
+                loadHistoricalData();
+            }
+        }
+
+        function getTabIndex(tabName) {
+            const tabs = ['simulation', 'comparison', 'asean', 'data'];
+            return tabs.indexOf(tabName);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('comparisonResults').style.display = 'none';
+            document.getElementById('aseanResults').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function runSimulation() {
+            showLoading();
+            
+            const scenario = document.getElementById('scenario').value;
+            const endYear = document.getElementById('end_year').value;
+
+            fetch('/simulate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    scenario: scenario,
+                    end_year: endYear
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error: ' + error);
+            });
+        }
+
+        function compareScenarios() {
+            showLoading();
+            
+            const endYear = document.getElementById('compare_end_year').value;
+
+            fetch('/compare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    end_year: endYear
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.success) {
+                    displayComparison(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error: ' + error);
+            });
+        }
+
+        function loadAseanComparison() {
+            showLoading();
+            
+            fetch('/asean')
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.success) {
+                    displayAseanComparison(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert('Error: ' + error);
+            });
+        }
+
+        function loadHistoricalData() {
+            fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayHistoricalData(data.historical_data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+
+        function displayResults(data) {
+            document.getElementById('results').style.display = 'block';
+            
+            // Display plot
+            document.getElementById('plot').src = data.plot_url;
+            
+            // Display metrics
+            const metrics = data.metrics;
+            const metricsHtml = `
+                <div class="metric-card ${metrics.target_achieved_2025 ? 'achieved' : 'not-achieved'}">
+                    <div class="metric-label">Pangsa 2025</div>
+                    <div class="metric-value">${metrics.target_2025}%</div>
+                    <div>${metrics.target_achieved_2025 ? '✅ Target Tercapai' : '❌ Target Tidak Tercapai'}</div>
+                </div>
+                <div class="metric-card ${metrics.target_achieved_final ? 'achieved' : 'not-achieved'}">
+                    <div class="metric-label">Pangsa Akhir</div>
+                    <div class="metric-value">${metrics.final_share}%</div>
+                    <div>${metrics.target_achieved_final ? '✅ Target Tercapai' : '❌ Target Tidak Tercapai'}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Kapasitas Akhir</div>
+                    <div class="metric-value">${metrics.final_capacity.toLocaleString()} MW</div>
+                    <div>Kapasitas Terpasang</div>
+                </div>
+            `;
+            
+            document.getElementById('metrics').innerHTML = metricsHtml;
+        }
+
+        function displayComparison(data) {
+            document.getElementById('comparisonResults').style.display = 'block';
+            
+            // Display comparison plot
+            document.getElementById('comparisonPlot').src = data.plot_url;
+            
+            // Display scenario comparison
+            const comparison = data.comparison_metrics;
+            let comparisonHtml = '';
+            
+            for (const [key, scenario] of Object.entries(comparison)) {
+                comparisonHtml += `
+                    <div class="scenario-card ${scenario.target_2025_achieved ? 'achieved' : 'not-achieved'}">
+                        <h3>${scenario.name}</h3>
+                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">
+                            ${scenario.share_2025}%
+                        </div>
+                        <div>Pangsa 2025</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem;">
+                            Final: ${scenario.final_share}%
+                        </div>
+                        <div style="margin-top: 5px;">
+                            ${scenario.target_2025_achieved ? '✅' : '❌'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('scenarioComparison').innerHTML = comparisonHtml;
+        }
+
+        function displayAseanComparison(data) {
+            document.getElementById('aseanResults').style.display = 'block';
+            
+            // Display ASEAN plot
+            document.getElementById('aseanPlot').src = data.plot_url;
+            
+            // Display ASEAN comparison
+            const aseanData = data.asean_data;
+            let aseanHtml = '';
+            
+            for (const [country, share] of Object.entries(aseanData)) {
+                const cardClass = country === 'Indonesia' ? 'country-card indonesia' : 'country-card other';
+                aseanHtml += `
+                    <div class="${cardClass}">
+                        <h3>${country}</h3>
+                        <div style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;">
+                            ${share.toFixed(1)}%
+                        </div>
+                        <div>Pangsa Energi Terbarukan</div>
+                        ${country === 'Indonesia' ? '<div style="margin-top: 10px;">🇮🇩 Target: 23%</div>' : ''}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('aseanComparison').innerHTML = aseanHtml;
+        }
+
+        function displayHistoricalData(data) {
+            let tableHtml = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <th style="padding: 12px; text-align: left;">Tahun</th>
+                            <th style="padding: 12px; text-align: left;">Kapasitas Terbarukan (MW)</th>
+                            <th style="padding: 12px; text-align: left;">Generasi Terbarukan (GWh)</th>
+                            <th style="padding: 12px; text-align: left;">Pangsa (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.forEach(row => {
+                tableHtml += `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 12px;">${row.year}</td>
+                        <td style="padding: 12px;">${row.renewable_capacity ? row.renewable_capacity.toLocaleString() : 'N/A'}</td>
+                        <td style="padding: 12px;">${row.renewable_generation ? row.renewable_generation.toLocaleString() : 'N/A'}</td>
+                        <td style="padding: 12px;">${row.renewable_share ? row.renewable_share.toFixed(2) : 'N/A'}%</td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += `</tbody></table>`;
+            document.getElementById('historicalData').innerHTML = tableHtml;
+        }
+
+        // Jalankan simulasi default saat halaman dimuat
+        window.addEventListener('load', function() {
+            runSimulation();
+        });
+    </script>
+</body>
+</html>

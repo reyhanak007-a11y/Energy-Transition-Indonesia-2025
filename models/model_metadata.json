@@ -1,0 +1,11 @@
+{
+  "created_at": "2025-11-24T12:45:04.140038",
+  "scenarios": [
+    "business_as_usual",
+    "investment_incentive",
+    "strict_regulation",
+    "combined_policy"
+  ],
+  "description": "Model Sistem Dinamik Transisi Energi Indonesia - Berbasis Data Aktual",
+  "data_source": "Renewable_Energy.csv"
+}
